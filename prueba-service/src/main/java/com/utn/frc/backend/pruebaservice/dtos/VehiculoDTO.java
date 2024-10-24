@@ -1,4 +1,4 @@
 package com.utn.frc.backend.pruebaservice.dtos;
 
-public class ModeloDTO {
+public class VehiculoDTO {
 }

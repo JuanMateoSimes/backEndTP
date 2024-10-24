@@ -1,4 +1,4 @@
-package com.utn.bda.agenciavehiculos.dtos;
+package com.utn.frc.backend.pruebaservice.dtos;
 
 public class MarcaDTO {
 }

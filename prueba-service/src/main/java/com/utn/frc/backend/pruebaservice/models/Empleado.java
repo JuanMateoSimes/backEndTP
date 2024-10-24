@@ -1,4 +1,4 @@
-package com.utn.bda.agenciavehiculos.models;
+package com.utn.frc.backend.pruebaservice.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
