@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ModeloDTO {
-    private MarcaDTO marca;
+    private Integer marcaId;
     private String descripcion;
-    private List<VehiculoDTO> vehiculos;
+    private List<Integer> vehiculosId;
 }

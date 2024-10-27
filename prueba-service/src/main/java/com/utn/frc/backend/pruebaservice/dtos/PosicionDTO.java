@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PosicionDTO {
-    private VehiculoDTO vehiculo;
-    private LocalDateTime fechaHora;
+    private Integer vehiculoId;
+    private Timestamp fechaHora;
     private Double latitud;
     private Double longitud;
 }

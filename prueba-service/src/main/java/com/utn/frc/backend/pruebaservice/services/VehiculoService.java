@@ -13,6 +13,7 @@ import com.utn.frc.backend.pruebaservice.repositories.VehiculoRepository;
 import com.utn.frc.backend.pruebaservice.repositories.EmpleadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class VehiculoService {
         if (interesado.isRestringido()) {
             throw new RuntimeException("El interesado está restringido para probar vehículos.");
         }
-        if (interesado.getInteFechaVencimientoLicencia().isBefore(LocalDateTime.now())) {
+        if (interesado.getInteFechaVencimientoLicencia().toLocalDateTime().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("La licencia del interesado está vencida.");
         }
 
@@ -61,7 +62,7 @@ public class VehiculoService {
         prueba.setVehiculo(vehiculo);
         prueba.setInteresado(interesado);
         prueba.setEmpleado(empleado);
-        prueba.setPrFechaHoraInicio(LocalDateTime.now());
+        prueba.setPrFechaHoraInicio(new Timestamp(System.currentTimeMillis()));
 
         prueba = pruebaRepository.save(prueba);
         return new PruebaDTO(prueba);
@@ -76,7 +77,7 @@ public class VehiculoService {
     // c. Finalizar una prueba con un comentario
     public PruebaDTO finalizarPrueba(Integer pruebaId, String comentario) {
         Prueba prueba = pruebaRepository.findById(pruebaId).orElseThrow(() -> new RuntimeException("Prueba no encontrada"));
-        prueba.setPrFechaHoraFin(LocalDateTime.now());
+        prueba.setPrFechaHoraFin(new Timestamp(System.currentTimeMillis()));
         prueba.setPrComentarios(comentario);
         prueba = pruebaRepository.save(prueba);
         return new PruebaDTO(prueba);
@@ -92,7 +93,7 @@ public class VehiculoService {
         posicion.setVehiculo(vehiculo);
         posicion.setPosLatitud(latitud);
         posicion.setPosLongitud(longitud);
-        posicion.setPosFechaHora(LocalDateTime.now());
+        posicion.setPosFechaHora(new Timestamp(System.currentTimeMillis()));
         posicionRepository.save(posicion);
 
         // Verificar si el vehículo está en prueba y ha excedido límites

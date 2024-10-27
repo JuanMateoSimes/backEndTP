@@ -32,4 +32,14 @@ public class PruebaController {
         pruebaService.finalizarPrueba(id, pruebaDTO);
         return ResponseEntity.ok("Prueba finalizada exitosamente.");
     }
+
+    @RestController
+    @RequestMapping("/test")
+    public class TestController {
+
+        @GetMapping
+        public String test() {
+            return "Autenticación exitosa!";
+        }
+    }
 }

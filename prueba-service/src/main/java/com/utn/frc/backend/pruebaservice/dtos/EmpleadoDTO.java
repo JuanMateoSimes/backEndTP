@@ -13,5 +13,5 @@ public class EmpleadoDTO {
     private String nombre;
     private String apellido;
     private Integer telefono;
-    private List<PruebaDTO> pruebas;
+    private List<Integer> pruebasId;
 }

@@ -27,9 +27,9 @@ public class Prueba {
     @JoinColumn(name = "ID_EMPLEADO")
     private Empleado empleado;
     @Column(name = "FECHA_HORA_INICIO")
-    private LocalDateTime prFechaHoraInicio = LocalDateTime.now();
+    private Timestamp prFechaHoraInicio = new Timestamp(System.currentTimeMillis());
     @Column(name = "FECHA_HORA_FIN")
-    private LocalDateTime prFechaHoraFin = LocalDateTime.now();
+    private Timestamp prFechaHoraFin = new Timestamp(System.currentTimeMillis());
     @Column(name = "COMENTARIOS")
     private String prComentarios;
 

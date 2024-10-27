@@ -20,6 +20,6 @@ public class InteresadoDTO {
     private String apellido;
     private Boolean restringido;
     private Integer nroLicencia;
-    private LocalDateTime fechaVencimientoLicencia;
-    private List<PruebaDTO> pruebas;
+    private Timestamp fechaVencimientoLicencia;
+    private List<Integer> pruebasId;
 }

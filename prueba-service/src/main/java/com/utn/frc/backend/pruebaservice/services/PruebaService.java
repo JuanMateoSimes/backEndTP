@@ -1,8 +1,14 @@
 package com.utn.frc.backend.pruebaservice.services;
 
 import com.utn.frc.backend.pruebaservice.dtos.PruebaDTO;
+import com.utn.frc.backend.pruebaservice.models.Empleado;
+import com.utn.frc.backend.pruebaservice.models.Interesado;
 import com.utn.frc.backend.pruebaservice.models.Prueba;
+import com.utn.frc.backend.pruebaservice.models.Vehiculo;
+import com.utn.frc.backend.pruebaservice.repositories.EmpleadoRepository;
+import com.utn.frc.backend.pruebaservice.repositories.InteresadoRepository;
 import com.utn.frc.backend.pruebaservice.repositories.PruebaRepository;
+import com.utn.frc.backend.pruebaservice.repositories.VehiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,20 +21,37 @@ public class PruebaService {
     @Autowired
     private PruebaRepository pruebaRepository;
 
+    @Autowired
+    private VehiculoRepository vehiculoRepository; // Añadir el repositorio correspondiente
+    @Autowired
+    private InteresadoRepository interesadoRepository; // Añadir el repositorio correspondiente
+    @Autowired
+    private EmpleadoRepository empleadoRepository; // Añadir el repositorio correspondiente
+
     // Crear una nueva prueba
     public void crearPrueba(PruebaDTO pruebaDTO) {
+
+        // Obtener las entidades necesarias
+        Vehiculo vehiculo = vehiculoRepository.findById(pruebaDTO.getVehiculoId())
+                .orElseThrow(() -> new IllegalStateException("Vehículo no encontrado"));
+        Interesado interesado = interesadoRepository.findById(pruebaDTO.getInteresadoId())
+                .orElseThrow(() -> new IllegalStateException("Interesado no encontrado"));
+        Empleado empleado = empleadoRepository.findById(pruebaDTO.getEmpleadoLegajo())
+                .orElseThrow(() -> new IllegalStateException("Empleado no encontrado"));
+
         // Verificar que el vehículo no esté en uso en otra prueba
-        if (pruebaRepository.countByVehiculoAndPrFechaHoraFinIsNull(pruebaDTO.getVehiculo()) > 0) {
+        if (pruebaRepository.countByVehiculoAndPrFechaHoraFinIsNull(vehiculo) > 0) {
             throw new IllegalStateException("El vehículo ya está siendo probado.");
         }
-        // Validaciones adicionales (licencia vencida, etc.) podrían ir aquí
 
         // Crear nueva entidad Prueba a partir del DTO
         Prueba prueba = new Prueba();
-        prueba.setVehiculo(pruebaDTO.getVehiculo());
-        prueba.setInteresado(pruebaDTO.getInteresado());
-        prueba.setEmpleado(pruebaDTO.getEmpleado());
+        prueba.setVehiculo(vehiculo);
+        prueba.setInteresado(interesado);
+        prueba.setEmpleado(empleado);
         prueba.setPrFechaHoraInicio(pruebaDTO.getFechaHoraInicio());
+        prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
+        prueba.setPrComentarios(pruebaDTO.getComentarios());
 
         // Guardar en la base de datos
         pruebaRepository.save(prueba);

@@ -21,7 +21,7 @@ public class Posicion {
     @JoinColumn(name = "ID_VEHICULO")
     private Vehiculo vehiculo;
     @Column(name = "FECHA_HORA")
-    private LocalDateTime posFechaHora = LocalDateTime.now();
+    private Timestamp posFechaHora = new Timestamp(System.currentTimeMillis());
     @Column(name = "LATITUD")
     private Double posLatitud;
     @Column(name = "LONGITUD")

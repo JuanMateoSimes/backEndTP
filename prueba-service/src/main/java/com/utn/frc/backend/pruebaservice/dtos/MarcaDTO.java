@@ -11,5 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 public class MarcaDTO {
     private String nombre;
-    private List<ModeloDTO> modelos;
+    private List<Integer> modelosId;
 }

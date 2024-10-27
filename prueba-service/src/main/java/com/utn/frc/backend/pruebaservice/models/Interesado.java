@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,7 +32,7 @@ public class Interesado {
     @Column(name = "NRO_LICENCIA")
     private Integer inteNroLicencia;
     @Column(name = "FECHA_VENCIMIENTO_LICENCIA")
-    private LocalDateTime inteFechaVencimientoLicencia;
+    private Timestamp inteFechaVencimientoLicencia;
     @OneToMany(mappedBy = "interesado")
     private List<Prueba> pruebas;
 
