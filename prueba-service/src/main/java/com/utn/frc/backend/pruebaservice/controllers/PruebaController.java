@@ -28,7 +28,7 @@ public class PruebaController {
     }
 
     @PostMapping("/{id}/finalizar")
-    public ResponseEntity<String> finalizarPrueba(@PathVariable Long id, @RequestBody PruebaDTO pruebaDTO) {
+    public ResponseEntity<String> finalizarPrueba(@PathVariable Integer id, @RequestBody PruebaDTO pruebaDTO) {
         pruebaService.finalizarPrueba(id, pruebaDTO);
         return ResponseEntity.ok("Prueba finalizada exitosamente.");
     }

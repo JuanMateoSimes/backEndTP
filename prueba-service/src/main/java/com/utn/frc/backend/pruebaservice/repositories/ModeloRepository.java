@@ -1,4 +1,7 @@
 package com.utn.frc.backend.pruebaservice.repositories;
 
-public interface ModeloRepository {
+import com.utn.frc.backend.pruebaservice.models.Modelo;
+import org.springframework.data.repository.CrudRepository;
+
+public interface ModeloRepository extends CrudRepository<Modelo, Integer> {
 }

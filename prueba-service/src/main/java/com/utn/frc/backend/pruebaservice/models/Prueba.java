@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Pruebas")
@@ -23,12 +24,12 @@ public class Prueba {
     @JoinColumn(name = "ID_INTERESADO")
     private Interesado interesado;
     @ManyToOne
-    @JoinColumn(name = "ID_VEHICULO")
+    @JoinColumn(name = "ID_EMPLEADO")
     private Empleado empleado;
     @Column(name = "FECHA_HORA_INICIO")
-    private Timestamp prFechaHoraInicio = new Timestamp(System.currentTimeMillis());
+    private LocalDateTime prFechaHoraInicio = LocalDateTime.now();
     @Column(name = "FECHA_HORA_FIN")
-    private Timestamp prFechaHoraFin = new Timestamp(System.currentTimeMillis());
+    private LocalDateTime prFechaHoraFin = LocalDateTime.now();
     @Column(name = "COMENTARIOS")
     private String prComentarios;
 

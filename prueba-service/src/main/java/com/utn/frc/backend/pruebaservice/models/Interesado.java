@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -30,8 +31,14 @@ public class Interesado {
     @Column(name = "NRO_LICENCIA")
     private Integer inteNroLicencia;
     @Column(name = "FECHA_VENCIMIENTO_LICENCIA")
-    private Timestamp inteFechaVencimientoLicencia;
+    private LocalDateTime inteFechaVencimientoLicencia;
     @OneToMany(mappedBy = "interesado")
     private List<Prueba> pruebas;
 
+    public boolean isRestringido() {
+        if (this.inteRestringido = false) {
+            return true;
+        }
+        return false;
+    };
 }

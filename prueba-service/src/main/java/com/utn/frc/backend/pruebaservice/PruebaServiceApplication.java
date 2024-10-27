@@ -1,4 +1,4 @@
-package com.utn.frc.backend.prueba_service;
+package com.utn.frc.backend.pruebaservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

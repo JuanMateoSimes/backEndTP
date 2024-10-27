@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Posiciones")
@@ -20,7 +21,7 @@ public class Posicion {
     @JoinColumn(name = "ID_VEHICULO")
     private Vehiculo vehiculo;
     @Column(name = "FECHA_HORA")
-    private Timestamp posFechaHora = new Timestamp(System.currentTimeMillis());
+    private LocalDateTime posFechaHora = LocalDateTime.now();
     @Column(name = "LATITUD")
     private Double posLatitud;
     @Column(name = "LONGITUD")
