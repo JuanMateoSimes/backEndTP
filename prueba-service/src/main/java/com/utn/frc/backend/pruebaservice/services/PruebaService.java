@@ -50,7 +50,9 @@ public class PruebaService {
         prueba.setInteresado(interesado);
         prueba.setEmpleado(empleado);
         prueba.setPrFechaHoraInicio(pruebaDTO.getFechaHoraInicio());
-        prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
+        if (pruebaDTO.getFechaHoraFin() != null) {
+            prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
+        }
         prueba.setPrComentarios(pruebaDTO.getComentarios());
 
         // Guardar en la base de datos

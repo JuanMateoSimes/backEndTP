@@ -1,5 +1,6 @@
 package com.utn.frc.backend.pruebaservice.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,5 +20,6 @@ public class Marca {
     @Column(name = "NOMBRE", length = 30)
     private String marcNombre;
     @OneToMany(mappedBy = "marca")
+    @JsonManagedReference
     private List<Modelo> modelos;
 }

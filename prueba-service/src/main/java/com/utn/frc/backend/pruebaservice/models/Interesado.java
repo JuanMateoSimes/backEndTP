@@ -1,5 +1,6 @@
 package com.utn.frc.backend.pruebaservice.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,6 +35,7 @@ public class Interesado {
     @Column(name = "FECHA_VENCIMIENTO_LICENCIA")
     private Timestamp inteFechaVencimientoLicencia;
     @OneToMany(mappedBy = "interesado")
+    @JsonManagedReference
     private List<Prueba> pruebas;
 
     public boolean isRestringido() {

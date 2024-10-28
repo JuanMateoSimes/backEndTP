@@ -1,5 +1,7 @@
 package com.utn.frc.backend.pruebaservice.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,9 +24,12 @@ public class Vehiculo {
     private String vehPatente;
     @ManyToOne
     @JoinColumn(name = "ID_MODELO")
+    @JsonBackReference
     private Modelo modelo;
     @OneToMany(mappedBy = "vehiculo")
+    @JsonManagedReference
     private List<Prueba> pruebas;
     @OneToMany(mappedBy = "vehiculo")
+    @JsonManagedReference
     private List<Posicion> posiciones;
 }

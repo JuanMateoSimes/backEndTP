@@ -1,5 +1,6 @@
 package com.utn.frc.backend.pruebaservice.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class Posicion {
     private Integer posId;
     @ManyToOne
     @JoinColumn(name = "ID_VEHICULO")
+    @JsonBackReference
     private Vehiculo vehiculo;
     @Column(name = "FECHA_HORA")
     private Timestamp posFechaHora = new Timestamp(System.currentTimeMillis());

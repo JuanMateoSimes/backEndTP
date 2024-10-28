@@ -12,11 +12,13 @@ import com.utn.frc.backend.pruebaservice.repositories.PruebaRepository;
 import com.utn.frc.backend.pruebaservice.repositories.VehiculoRepository;
 import com.utn.frc.backend.pruebaservice.repositories.EmpleadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Service
 public class VehiculoService {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
@@ -26,62 +28,15 @@ public class VehiculoService {
     @Autowired
     private PruebaRepository pruebaRepository;
 
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    @Autowired
-    private InteresadoRepository interesadoRepository;
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     private PosicionRepository posicionRepository;
 
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    @Autowired
-    private EmpleadoRepository empleadoRepository;
-
-    // a. Crear una nueva prueba
-    public PruebaDTO crearPrueba(Integer vehiculoId, Integer interesadoId, Integer empleadoId) throws Throwable {
-        Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
-        Interesado interesado = interesadoRepository.findById(interesadoId).orElseThrow(() -> new RuntimeException("Interesado no encontrado"));
-        Empleado empleado = empleadoRepository.findById(empleadoId).orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
-
-        // Validaciones: licencia no vencida y no restringido
-        if (interesado.isRestringido()) {
-            throw new RuntimeException("El interesado está restringido para probar vehículos.");
-        }
-        if (interesado.getInteFechaVencimientoLicencia().toLocalDateTime().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("La licencia del interesado está vencida.");
-        }
-
-        // Validación: el vehículo no debe estar en prueba
-        if (pruebaRepository.existsByVehiculoAndPrFechaHoraFinIsNull(vehiculo)) {
-            throw new RuntimeException("El vehículo ya está siendo probado.");
-        }
-
-        // Crear y guardar la nueva prueba
-        Prueba prueba = new Prueba();
-        prueba.setVehiculo(vehiculo);
-        prueba.setInteresado(interesado);
-        prueba.setEmpleado(empleado);
-        prueba.setPrFechaHoraInicio(new Timestamp(System.currentTimeMillis()));
-
-        prueba = pruebaRepository.save(prueba);
-        return new PruebaDTO(prueba);
+    public List<Vehiculo> obtenerTodosLosVehiculos() {
+        return (List<Vehiculo>) vehiculoRepository.findAll();
     }
 
-    // b. Listar todas las pruebas en curso
-    public List<PruebaDTO> listarPruebasEnCurso() {
-        List<Prueba> pruebas = pruebaRepository.findByPrFechaHoraFinIsNull();
-        return pruebas.stream().map(PruebaDTO::new).toList();
-    }
-
-    // c. Finalizar una prueba con un comentario
-    public PruebaDTO finalizarPrueba(Integer pruebaId, String comentario) {
-        Prueba prueba = pruebaRepository.findById(pruebaId).orElseThrow(() -> new RuntimeException("Prueba no encontrada"));
-        prueba.setPrFechaHoraFin(new Timestamp(System.currentTimeMillis()));
-        prueba.setPrComentarios(comentario);
-        prueba = pruebaRepository.save(prueba);
-        return new PruebaDTO(prueba);
-    }
 
     // d. Recibir la posición actual de un vehículo y verificar límites
     public void registrarPosicionVehiculo(Integer vehiculoId, double latitud, double longitud) {
