@@ -9,8 +9,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModeloDTO {
-    private Integer marcaId;
-    private String descripcion;
-    private List<Integer> vehiculosId;
+public class ConfiguracionDTO {
+    private CoordenadaDTO coordenadasAgencia;
+    private double radioAdmitidoKm;
+    private List<ZonaRestringidaDTO> zonasRestringidas;
 }

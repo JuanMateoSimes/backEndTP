@@ -22,6 +22,9 @@ public class PruebaController {
         return ResponseEntity.ok("Prueba creada exitosamente.");
     }
 
+    @GetMapping()
+    public List<Prueba> listarPruebas() {return pruebaService.obtenerPruebas();}
+
     @GetMapping("/en-curso")
     public List<Prueba> listarPruebasEnCurso() {
         return pruebaService.obtenerPruebasEnCurso();

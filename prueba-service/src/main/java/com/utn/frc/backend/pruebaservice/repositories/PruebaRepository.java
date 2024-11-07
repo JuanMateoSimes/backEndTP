@@ -14,13 +14,10 @@ public interface PruebaRepository extends CrudRepository<Prueba, Integer> {
     // Método para obtener todas las pruebas en curso (que no han finalizado)
     List<Prueba> findByPrFechaHoraFinIsNull();
 
-    // Método para obtener todas las pruebas en curso antes de una fecha específica
-    List<Prueba> findByPrFechaHoraInicioBeforeAndPrFechaHoraFinIsNull(Timestamp now);
+    List<Prueba> findAll();
 
     // Método para contar las pruebas activas para un vehículo específico
     Integer countByVehiculoAndPrFechaHoraFinIsNull(Vehiculo vehiculo);
-
-    Boolean existsByVehiculoAndPrFechaHoraFinIsNull(Vehiculo vehiculo);
 
     Optional<Prueba> findByVehiculoAndPrFechaHoraFinIsNull(Vehiculo vehiculo);
 

@@ -1,16 +1,18 @@
 package com.utn.frc.backend.pruebaservice.services;
 
-import com.utn.frc.backend.pruebaservice.dtos.PruebaDTO;
-import com.utn.frc.backend.pruebaservice.models.Interesado;
+import com.utn.frc.backend.pruebaservice.api.ZonaRestringida;
+import com.utn.frc.backend.pruebaservice.client.APIClient;
+import com.utn.frc.backend.pruebaservice.client.NotificacionClient;
+import com.utn.frc.backend.pruebaservice.dtos.*;
+import com.utn.frc.backend.pruebaservice.models.Empleado;
 import com.utn.frc.backend.pruebaservice.models.Posicion;
 import com.utn.frc.backend.pruebaservice.models.Prueba;
 import com.utn.frc.backend.pruebaservice.models.Vehiculo;
-import com.utn.frc.backend.pruebaservice.models.Empleado;
-import com.utn.frc.backend.pruebaservice.repositories.InteresadoRepository;
+import com.utn.frc.backend.pruebaservice.repositories.EmpleadoRepository;
 import com.utn.frc.backend.pruebaservice.repositories.PosicionRepository;
 import com.utn.frc.backend.pruebaservice.repositories.PruebaRepository;
 import com.utn.frc.backend.pruebaservice.repositories.VehiculoRepository;
-import com.utn.frc.backend.pruebaservice.repositories.EmpleadoRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,97 +22,131 @@ import java.util.List;
 
 @Service
 public class VehiculoService {
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+
     @Autowired
     private VehiculoRepository vehiculoRepository;
 
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     private PruebaRepository pruebaRepository;
 
-
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     private PosicionRepository posicionRepository;
+
+    @Autowired
+    private NotificacionClient notificacionClient;
+
+    @Autowired
+    private EmpleadoRepository empleadoRepository;
+
+    @Autowired
+    private APIClient apiClient;
+
+    private ConfiguracionDTO configuracion;
 
     public List<Vehiculo> obtenerTodosLosVehiculos() {
         return (List<Vehiculo>) vehiculoRepository.findAll();
     }
 
+    public void registrarPosicionVehiculo(PosicionDTO posicionDTO) {
+        Vehiculo vehiculo = vehiculoRepository.findById(posicionDTO.getVehiculoId())
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
 
-    // d. Recibir la posición actual de un vehículo y verificar límites
-    public void registrarPosicionVehiculo(Integer vehiculoId, double latitud, double longitud) {
-        Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
-        Prueba pruebaEnCurso = pruebaRepository.findByVehiculoAndPrFechaHoraFinIsNull(vehiculo)
-                .orElse(null);
+        Prueba pruebaEnCurso = pruebaRepository.findByVehiculoAndPrFechaHoraFinIsNull(vehiculo).orElse(null);
 
-        Posicion posicion = new Posicion();
-        posicion.setVehiculo(vehiculo);
-        posicion.setPosLatitud(latitud);
-        posicion.setPosLongitud(longitud);
-        posicion.setPosFechaHora(new Timestamp(System.currentTimeMillis()));
-        posicionRepository.save(posicion);
-
-        // Verificar si el vehículo está en prueba y ha excedido límites
         if (pruebaEnCurso != null) {
-            if (excedeLimitePermitido(latitud, longitud)) {
-                // Aquí se podría generar una notificación o guardar el incidente
-                registrarIncidente(pruebaEnCurso, "Excedió el límite permitido");
-            }
-            if (estaEnZonaPeligrosa(latitud, longitud)) {
-                registrarIncidente(pruebaEnCurso, "Ingresó a una zona peligrosa");
+            // Crear y guardar la nueva posición en la base de datos
+            Posicion posicion = new Posicion();
+            posicion.setVehiculo(vehiculo);
+            posicion.setPosLatitud(posicionDTO.getLatitud());
+            posicion.setPosLongitud(posicionDTO.getLongitud());
+            posicion.setPosFechaHora(posicionDTO.getFechaHora());
+
+            posicionRepository.save(posicion);
+
+            // Verificar si es necesario enviar una notificación
+            boolean limiteExcedido = excedeLimitePermitido(posicionDTO.getLatitud(), posicionDTO.getLongitud());
+            boolean enZonaPeligrosa = estaEnZonaPeligrosa(posicionDTO.getLatitud(), posicionDTO.getLongitud());
+
+            if (limiteExcedido || enZonaPeligrosa) {
+                NotificacionDTO notificacion = new NotificacionDTO();
+                notificacion.setPruebaId(pruebaEnCurso.getPrId());
+                notificacion.setVehiculoId(posicionDTO.getVehiculoId());
+                notificacion.setEmpleadoTelefono(pruebaEnCurso.getEmpleado().getEmpTelefono());
+                notificacion.setMensaje(limiteExcedido ? "Excedió el límite permitido" : "Ingresó a una zona peligrosa");
+                notificacion.setFechaHora(posicionDTO.getFechaHora());
+
+                try {
+                    notificacionClient.crearNotificacion(notificacion);
+                    System.out.println("Notificación creada");
+                } catch (Exception e) {
+                    System.err.println("Error al enviar notificación: " + e.getMessage());
+                }
             }
         }
     }
 
     private boolean excedeLimitePermitido(double latitud, double longitud) {
-        // Lógica para calcular si excede el radio permitido
-        // Esto sería una verificación usando distancia a un punto permitido
-        return false;
+        // Llamada a calcularDistancia pasando las coordenadas de la agencia
+        double distancia = calcularDistancia(latitud, longitud,
+                configuracion.getCoordenadasAgencia().getLat(),
+                configuracion.getCoordenadasAgencia().getLon());
+
+        // Comparación con el radio admitido
+        return distancia > configuracion.getRadioAdmitidoKm();
     }
+
 
     private boolean estaEnZonaPeligrosa(double latitud, double longitud) {
-        // Lógica para verificar si está en una zona peligrosa
+        for (ZonaRestringidaDTO zona : configuracion.getZonasRestringidas()) {
+            if (latitud <= zona.getNoroeste().getLat() && latitud >= zona.getSureste().getLat()
+                    && longitud >= zona.getNoroeste().getLon() && longitud <= zona.getSureste().getLon()) {
+                return true;
+            }
+        }
         return false;
     }
 
-    private void registrarIncidente(Prueba prueba, String descripcion) {
-        // Aquí se registrarían los detalles del incidente en la base de datos
-    }
-
-    // f. Reportes
-    // i. Incidentes (pruebas donde se excedieron los límites)
+    // Reportes
     public List<PruebaDTO> reporteIncidentes() {
-        // Aquí se consulta y devuelve pruebas con incidentes
+        // Consulta y devuelve pruebas con incidentes
         return null;
     }
 
-    // ii. Detalle de incidentes para un empleado
     public List<PruebaDTO> reporteIncidentesPorEmpleado(Long empleadoId) {
-        // Aquí se consulta y devuelve incidentes para un empleado específico
+        // Consulta y devuelve incidentes para un empleado específico
         return null;
     }
 
-    // iii. Cantidad de kilómetros de prueba recorridos por un vehículo en un período
-    public double kilometrajeRecorrido(Integer vehiculoId, LocalDateTime inicio, LocalDateTime fin) {
-        Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+    public double kilometrajeRecorrido(Integer vehiculoId, Timestamp inicio, Timestamp fin) {
+        Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
         List<Posicion> posiciones = posicionRepository.findByVehiculoAndPosFechaHoraBetween(vehiculo, inicio, fin);
 
         double distanciaTotal = 0;
         for (int i = 1; i < posiciones.size(); i++) {
-            distanciaTotal += calcularDistancia(posiciones.get(i - 1), posiciones.get(i));
+            // Extraemos latitud y longitud de las posiciones consecutivas
+            double lat1 = posiciones.get(i - 1).getPosLatitud();
+            double lon1 = posiciones.get(i - 1).getPosLongitud();
+            double lat2 = posiciones.get(i).getPosLatitud();
+            double lon2 = posiciones.get(i).getPosLongitud();
+
+            // Calculamos la distancia entre las posiciones consecutivas
+            distanciaTotal += calcularDistancia(lat1, lon1, lat2, lon2);
         }
         return distanciaTotal;
     }
 
-    private double calcularDistancia(Posicion pos1, Posicion pos2) {
-        // Lógica para calcular la distancia entre dos puntos (pos1 y pos2)
-        return 0;
+
+    private double calcularDistancia(double lat1, double lon1, double lat2, double lon2) {
+        // Calculando la distancia euclidiana
+        return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lon2 - lon1, 2));
     }
 
-    // iv. Detalle de pruebas realizadas para un vehículo
+
+
     public List<PruebaDTO> pruebasPorVehiculo(Integer vehiculoId) {
-        Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+        Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
         List<Prueba> pruebas = pruebaRepository.findByVehiculo(vehiculo);
         return pruebas.stream().map(PruebaDTO::new).toList();
     }

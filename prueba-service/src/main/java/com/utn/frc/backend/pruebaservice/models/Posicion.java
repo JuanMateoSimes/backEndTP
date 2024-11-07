@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class Posicion {
     @Id
     @Column(name = "ID")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer posId;
     @ManyToOne
     @JoinColumn(name = "ID_VEHICULO")

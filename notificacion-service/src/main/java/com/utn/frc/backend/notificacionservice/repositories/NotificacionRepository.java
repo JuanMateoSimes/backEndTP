@@ -1,4 +1,7 @@
-package com.utn.bda.agenciavehiculos.repositories;
+package com.utn.frc.backend.notificacionservice.repositories;
 
-public interface NotificacionRepository {
+import com.utn.frc.backend.notificacionservice.models.Notificacion;
+import org.springframework.data.repository.CrudRepository;
+
+public interface NotificacionRepository extends CrudRepository<Notificacion, Integer> {
 }

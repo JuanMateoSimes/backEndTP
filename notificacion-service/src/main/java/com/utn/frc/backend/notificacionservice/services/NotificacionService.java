@@ -1,4 +1,29 @@
 package com.utn.frc.backend.notificacionservice.services;
 
+import com.utn.frc.backend.notificacionservice.dtos.NotificacionDTO;
+import com.utn.frc.backend.notificacionservice.models.Notificacion;
+import com.utn.frc.backend.notificacionservice.repositories.NotificacionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
 public class NotificacionService {
+
+    private final NotificacionRepository notificacionRepository;
+
+    @Autowired
+    public NotificacionService(NotificacionRepository notificacionRepository) {
+        this.notificacionRepository = notificacionRepository;
+    }
+
+    public void guardarNotificacion(NotificacionDTO notificacionDTO) {
+        Notificacion notificacion = new Notificacion();
+        notificacion.setPruebaId(notificacionDTO.getPruebaId());
+        notificacion.setVehiculoId(notificacionDTO.getVehiculoId());
+        notificacion.setEmpleadoTelefono(notificacionDTO.getEmpleadoTelefono());
+        notificacion.setMensaje(notificacionDTO.getMensaje());
+        notificacion.setFechaHora(notificacionDTO.getFechaHora());
+
+        notificacionRepository.save(notificacion);
+    }
 }

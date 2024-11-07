@@ -64,6 +64,10 @@ public class PruebaService {
         return pruebaRepository.findByPrFechaHoraFinIsNull();
     }
 
+    // Obtener todas las pruebas
+
+    public List<Prueba> obtenerPruebas() {return pruebaRepository.findAll();}
+
     // Finalizar una prueba existente
     public void finalizarPrueba(Integer id, PruebaDTO pruebaDTO) {
         Optional<Prueba> pruebaOptional = pruebaRepository.findById(id);
