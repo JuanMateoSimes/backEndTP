@@ -22,6 +22,8 @@ import java.util.List;
 
 @Service
 public class VehiculoService {
+    @Autowired
+    private APIClient apiClient;
 
     @Autowired
     private VehiculoRepository vehiculoRepository;
@@ -38,9 +40,6 @@ public class VehiculoService {
     @Autowired
     private EmpleadoRepository empleadoRepository;
 
-    @Autowired
-    private APIClient apiClient;
-
     private ConfiguracionDTO configuracion;
 
     public List<Vehiculo> obtenerTodosLosVehiculos() {
@@ -48,6 +47,11 @@ public class VehiculoService {
     }
 
     public void registrarPosicionVehiculo(PosicionDTO posicionDTO) {
+        // Llama al cliente para obtener la configuración
+        if (configuracion == null) {
+            configuracion = apiClient.obtenerConfiguracion();
+        }
+
         Vehiculo vehiculo = vehiculoRepository.findById(posicionDTO.getVehiculoId())
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
 
@@ -71,9 +75,13 @@ public class VehiculoService {
                 NotificacionDTO notificacion = new NotificacionDTO();
                 notificacion.setPruebaId(pruebaEnCurso.getPrId());
                 notificacion.setVehiculoId(posicionDTO.getVehiculoId());
+                System.out.println("Teléfono empleado antes de set: " + pruebaEnCurso.getEmpleado().getEmpTelefono());
                 notificacion.setEmpleadoTelefono(pruebaEnCurso.getEmpleado().getEmpTelefono());
+                System.out.println("Teléfono empleado en DTO: " + notificacion.getEmpleadoTelefono());
                 notificacion.setMensaje(limiteExcedido ? "Excedió el límite permitido" : "Ingresó a una zona peligrosa");
-                notificacion.setFechaHora(posicionDTO.getFechaHora());
+                notificacion.setFechaHora(String.valueOf(posicionDTO.getFechaHora()));
+
+                System.out.println(notificacion);
 
                 try {
                     notificacionClient.crearNotificacion(notificacion);

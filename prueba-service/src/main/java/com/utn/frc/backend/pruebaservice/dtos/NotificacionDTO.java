@@ -1,6 +1,7 @@
 package com.utn.frc.backend.pruebaservice.dtos;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ import java.sql.Timestamp;
 public class NotificacionDTO {
     private Integer pruebaId;
     private Integer vehiculoId;
-    private Integer empleadoTelefono;
+    private Long empleadoTelefono;
     private String mensaje;
-    private Timestamp fechaHora;
+    private String fechaHora;
 }

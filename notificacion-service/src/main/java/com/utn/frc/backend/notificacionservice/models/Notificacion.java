@@ -1,5 +1,6 @@
 package com.utn.frc.backend.notificacionservice.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,10 +20,8 @@ public class Notificacion {
 
     private Integer pruebaId;
     private Integer vehiculoId;
-    private Integer empleadoTelefono;
+    private Long empleadoTelefono;
     private String mensaje;
-    private Timestamp fechaHora;
-
-    // Getters y Setters
+    private String fechaHora;
 
 }

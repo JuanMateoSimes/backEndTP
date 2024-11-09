@@ -33,7 +33,7 @@ public class Interesado {
     @Column(name = "NRO_LICENCIA")
     private Integer inteNroLicencia;
     @Column(name = "FECHA_VENCIMIENTO_LICENCIA")
-    private Timestamp inteFechaVencimientoLicencia;
+    private String inteFechaVencimientoLicencia;
     @OneToMany(mappedBy = "interesado")
     @JsonManagedReference
     private List<Prueba> pruebas;

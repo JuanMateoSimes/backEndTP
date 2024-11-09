@@ -12,6 +12,6 @@ import java.util.List;
 public class EmpleadoDTO {
     private String nombre;
     private String apellido;
-    private Integer telefono;
+    private Long telefono;
     private List<Integer> pruebasId;
 }

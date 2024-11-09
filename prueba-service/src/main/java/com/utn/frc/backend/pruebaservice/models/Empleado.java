@@ -22,7 +22,7 @@ public class Empleado {
     @Column(name = "APELLIDO", length = 50)
     private String empApellido;
     @Column(name = "TELEFONO_CONTACTO")
-    private Integer empTelefono;
+    private Long empTelefono;
     @OneToMany(mappedBy = "empleado")
     @JsonManagedReference
     private List<Prueba> pruebas;

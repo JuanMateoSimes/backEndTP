@@ -6,8 +6,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.cglib.core.Local;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,11 +35,9 @@ public class Prueba {
     @JsonBackReference
     private Empleado empleado;
     @Column(name = "FECHA_HORA_INICIO")
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private Timestamp prFechaHoraInicio;
+    private String prFechaHoraInicio;
     @Column(name = "FECHA_HORA_FIN", nullable = true)
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private Timestamp prFechaHoraFin;
+    private String prFechaHoraFin;
     @Column(name = "COMENTARIOS")
     private String prComentarios;
 
