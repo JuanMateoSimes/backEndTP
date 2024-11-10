@@ -24,9 +24,11 @@ import lombok.NoArgsConstructor;
 public class PruebaDTO {
     private Integer vehiculoId; // ID del vehículo en lugar del objeto
     private Integer interesadoId; // ID del interesado (si deseas cambiarlo)
-    private Integer empleadoLegajo; // ID del empleado (si deseas cambiarlo)
-    private String fechaHoraInicio; // Fecha y hora de inicio de la prueba
-    private String fechaHoraFin;     // Fecha y hora de fin de la prueba
+    private Integer empleadoLegajo;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "America/Argentina/Buenos_Aires")
+    private Timestamp fechaHoraInicio;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "America/Argentina/Buenos_Aires")
+    private Timestamp fechaHoraFin;     // Fecha y hora de fin de la prueba
     private String comentarios; // Comentarios sobre la prueba
 
     public PruebaDTO(Prueba prueba) {

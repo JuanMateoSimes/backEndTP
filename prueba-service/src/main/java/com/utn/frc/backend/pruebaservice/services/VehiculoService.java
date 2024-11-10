@@ -18,7 +18,10 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class VehiculoService {
@@ -75,9 +78,7 @@ public class VehiculoService {
                 NotificacionDTO notificacion = new NotificacionDTO();
                 notificacion.setPruebaId(pruebaEnCurso.getPrId());
                 notificacion.setVehiculoId(posicionDTO.getVehiculoId());
-                System.out.println("Teléfono empleado antes de set: " + pruebaEnCurso.getEmpleado().getEmpTelefono());
                 notificacion.setEmpleadoTelefono(pruebaEnCurso.getEmpleado().getEmpTelefono());
-                System.out.println("Teléfono empleado en DTO: " + notificacion.getEmpleadoTelefono());
                 notificacion.setMensaje(limiteExcedido ? "Excedió el límite permitido" : "Ingresó a una zona peligrosa");
                 notificacion.setFechaHora(String.valueOf(posicionDTO.getFechaHora()));
 
@@ -90,6 +91,9 @@ public class VehiculoService {
                     System.err.println("Error al enviar notificación: " + e.getMessage());
                 }
             }
+        } else {
+            // Mensaje si no hay una prueba en curso
+            System.out.println("No se encontró una prueba en curso para el vehículo con ID: " + posicionDTO.getVehiculoId());
         }
     }
 
@@ -114,31 +118,80 @@ public class VehiculoService {
         return false;
     }
 
-    // Reportes
-    public List<PruebaDTO> reporteIncidentes() {
-        // Consulta y devuelve pruebas con incidentes
-        return null;
+    //
+    public List<ReporteIncidenteDTO> reporteIncidentes() {
+        List<NotificacionDTO> notificaciones = notificacionClient.obtenerNotificaciones();
+
+        // Agrupamos las notificaciones por pruebaId
+        Map<Integer, List<NotificacionDTO>> notificacionesPorPrueba = notificaciones.stream()
+                .filter(notificacion -> "Excedió el límite permitido".equals(notificacion.getMensaje()))
+                .collect(Collectors.groupingBy(NotificacionDTO::getPruebaId));
+
+        // Creamos la lista de ReporteIncidenteDTO con la información de prueba y sus notificaciones
+        List<ReporteIncidenteDTO> reporteIncidentes = notificacionesPorPrueba.entrySet().stream()
+                .map(entry -> {
+                    Integer pruebaId = entry.getKey();
+                    List<NotificacionDTO> notificacionesAsociadas = entry.getValue();
+                    Prueba prueba = pruebaRepository.findById(pruebaId)
+                            .orElseThrow(() -> new RuntimeException("Prueba no encontrada"));
+                    PruebaDTO pruebaDTO = new PruebaDTO(prueba);
+                    return new ReporteIncidenteDTO(pruebaDTO, notificacionesAsociadas);
+                })
+                .toList();
+
+        return reporteIncidentes;
     }
 
-    public List<PruebaDTO> reporteIncidentesPorEmpleado(Long empleadoId) {
-        // Consulta y devuelve incidentes para un empleado específico
-        return null;
+
+    public List<ReporteIncidenteDTO> reporteIncidentesPorEmpleado(Integer empleadoId) {
+        // Verifica si el empleado existe
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+
+        // Obtiene todas las notificaciones
+        List<NotificacionDTO> notificaciones = notificacionClient.obtenerNotificaciones();
+
+        // Filtra notificaciones para el empleado específico y con el mensaje "Excedió el límite permitido"
+        Map<Integer, List<NotificacionDTO>> notificacionesPorPrueba = notificaciones.stream()
+                .filter(notificacion -> "Excedió el límite permitido".equals(notificacion.getMensaje()) &&
+                        empleado.getEmpTelefono().equals(notificacion.getEmpleadoTelefono()))
+                .collect(Collectors.groupingBy(NotificacionDTO::getPruebaId));
+
+        // Crea lista de ReporteIncidenteDTO con la información de prueba y notificaciones filtradas
+        List<ReporteIncidenteDTO> reporteIncidentes = notificacionesPorPrueba.entrySet().stream()
+                .map(entry -> {
+                    Integer pruebaId = entry.getKey();
+                    List<NotificacionDTO> notificacionesAsociadas = entry.getValue();
+
+                    // Busca la prueba por ID y convierte a PruebaDTO
+                    Prueba prueba = pruebaRepository.findById(pruebaId)
+                            .orElseThrow(() -> new RuntimeException("Prueba no encontrada"));
+                    PruebaDTO pruebaDTO = new PruebaDTO(prueba);
+
+                    return new ReporteIncidenteDTO(pruebaDTO, notificacionesAsociadas);
+                })
+                .toList();
+
+        return reporteIncidentes;
     }
+
 
     public double kilometrajeRecorrido(Integer vehiculoId, Timestamp inicio, Timestamp fin) {
         Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+
         List<Posicion> posiciones = posicionRepository.findByVehiculoAndPosFechaHoraBetween(vehiculo, inicio, fin);
+
+        // Convertimos las fechas de String a Timestamp y ordenamos por fecha
+        posiciones.sort(Comparator.comparing(pos -> pos.getPosFechaHora()));
 
         double distanciaTotal = 0;
         for (int i = 1; i < posiciones.size(); i++) {
-            // Extraemos latitud y longitud de las posiciones consecutivas
             double lat1 = posiciones.get(i - 1).getPosLatitud();
             double lon1 = posiciones.get(i - 1).getPosLongitud();
             double lat2 = posiciones.get(i).getPosLatitud();
             double lon2 = posiciones.get(i).getPosLongitud();
 
-            // Calculamos la distancia entre las posiciones consecutivas
             distanciaTotal += calcularDistancia(lat1, lon1, lat2, lon2);
         }
         return distanciaTotal;

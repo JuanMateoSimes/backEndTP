@@ -6,6 +6,8 @@ import com.utn.frc.backend.notificacionservice.repositories.NotificacionReposito
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class NotificacionService {
 
@@ -29,4 +31,10 @@ public class NotificacionService {
 
         notificacionRepository.save(notificacion);
     }
+
+    public List<Notificacion> obtenerNotificaciones() {
+        return (List<Notificacion>) notificacionRepository.findAll();
+    }
+
+
 }

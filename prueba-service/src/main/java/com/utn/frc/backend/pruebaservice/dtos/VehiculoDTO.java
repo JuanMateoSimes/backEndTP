@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class VehiculoDTO {
     private String patente;
+    private Integer anio;
     private Integer modeloId;
     private List<Integer> pruebasId;
     private List<Integer> posicionesId;

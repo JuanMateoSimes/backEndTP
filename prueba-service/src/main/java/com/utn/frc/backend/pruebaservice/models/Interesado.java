@@ -33,15 +33,9 @@ public class Interesado {
     @Column(name = "NRO_LICENCIA")
     private Integer inteNroLicencia;
     @Column(name = "FECHA_VENCIMIENTO_LICENCIA")
-    private String inteFechaVencimientoLicencia;
+    private Timestamp inteFechaVencimientoLicencia;
     @OneToMany(mappedBy = "interesado")
     @JsonManagedReference
     private List<Prueba> pruebas;
 
-    public boolean isRestringido() {
-        if (this.inteRestringido = false) {
-            return true;
-        }
-        return false;
-    };
 }

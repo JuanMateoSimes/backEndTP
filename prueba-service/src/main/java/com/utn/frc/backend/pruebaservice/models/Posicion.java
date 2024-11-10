@@ -25,7 +25,8 @@ public class Posicion {
     @JsonBackReference
     private Vehiculo vehiculo;
     @Column(name = "FECHA_HORA")
-    private Timestamp posFechaHora;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "America/Argentina/Buenos_Aires")
+    private Timestamp posFechaHora = new Timestamp(System.currentTimeMillis());
     @Column(name = "LATITUD")
     private Double posLatitud;
     @Column(name = "LONGITUD")

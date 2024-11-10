@@ -22,6 +22,8 @@ public class Vehiculo {
     private Integer vehId;
     @Column(name = "PATENTE")
     private String vehPatente;
+    @Column(name = "ANIO")
+    private Integer vehAnio = 2019;
     @ManyToOne
     @JoinColumn(name = "ID_MODELO")
     @JsonBackReference

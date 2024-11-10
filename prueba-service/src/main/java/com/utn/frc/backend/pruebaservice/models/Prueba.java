@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.cglib.core.Local;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,10 +36,12 @@ public class Prueba {
     @JsonBackReference
     private Empleado empleado;
     @Column(name = "FECHA_HORA_INICIO")
-    private String prFechaHoraInicio;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "America/Argentina/Buenos_Aires")
+    private Timestamp prFechaHoraInicio = new Timestamp(System.currentTimeMillis());
     @Column(name = "FECHA_HORA_FIN", nullable = true)
-    private String prFechaHoraFin;
-    @Column(name = "COMENTARIOS")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "America/Argentina/Buenos_Aires")
+    private Timestamp prFechaHoraFin;
+    @Column(name = "COMENTARIOS", length = 500)
     private String prComentarios;
 
 

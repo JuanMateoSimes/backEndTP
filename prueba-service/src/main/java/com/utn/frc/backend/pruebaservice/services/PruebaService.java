@@ -12,6 +12,7 @@ import com.utn.frc.backend.pruebaservice.repositories.VehiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +40,16 @@ public class PruebaService {
         Empleado empleado = empleadoRepository.findById(pruebaDTO.getEmpleadoLegajo())
                 .orElseThrow(() -> new IllegalStateException("Empleado no encontrado"));
 
+        // Validar que el interesado no esté restringido
+        if (interesado.getInteRestringido()) {
+            throw new IllegalStateException("El interesado está restringido y no puede realizar pruebas.");
+        }
+
+        // Validar que la licencia del interesado no esté vencida
+        if (interesado.getInteFechaVencimientoLicencia().before(new Timestamp(System.currentTimeMillis()))) {
+            throw new IllegalStateException("La licencia del interesado está vencida.");
+        }
+
         // Verificar que el vehículo no esté en uso en otra prueba
         if (pruebaRepository.countByVehiculoAndPrFechaHoraFinIsNull(vehiculo) > 0) {
             throw new IllegalStateException("El vehículo ya está siendo probado.");
@@ -59,6 +70,7 @@ public class PruebaService {
         pruebaRepository.save(prueba);
     }
 
+
     // Obtener todas las pruebas en curso
     public List<Prueba> obtenerPruebasEnCurso() {
         return pruebaRepository.findByPrFechaHoraFinIsNull();
@@ -66,7 +78,9 @@ public class PruebaService {
 
     // Obtener todas las pruebas
 
-    public List<Prueba> obtenerPruebas() {return pruebaRepository.findAll();}
+    public List<Prueba> obtenerPruebas() {
+        return pruebaRepository.findAll();
+    }
 
     // Finalizar una prueba existente
     public void finalizarPrueba(Integer id, PruebaDTO pruebaDTO) {
@@ -74,9 +88,13 @@ public class PruebaService {
         if (!pruebaOptional.isPresent()) {
             throw new IllegalStateException("La prueba no existe.");
         }
-
         Prueba prueba = pruebaOptional.get();
-        prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
+        try {
+            prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("El formato de fechaHoraFin no es válido. Debe estar en el formato 'yyyy-MM-dd HH:mm:ss.SSS'", e);
+        }
+
         prueba.setPrComentarios(pruebaDTO.getComentarios());
 
         // Guardar los cambios
