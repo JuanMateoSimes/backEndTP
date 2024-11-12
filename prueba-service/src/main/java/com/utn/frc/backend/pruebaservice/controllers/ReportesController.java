@@ -3,7 +3,6 @@ package com.utn.frc.backend.pruebaservice.controllers;
 import com.utn.frc.backend.pruebaservice.dtos.PruebaDTO;
 import com.utn.frc.backend.pruebaservice.dtos.ReporteIncidenteDTO;
 import com.utn.frc.backend.pruebaservice.services.VehiculoService;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;

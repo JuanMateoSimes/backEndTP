@@ -1,7 +1,6 @@
 package com.utn.frc.backend.agenciavehiculos.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -15,17 +14,15 @@ import reactor.core.publisher.Mono;
 
 @EnableWebFluxSecurity
 public class SecurityConfig {
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        logger.debug("Iniciando configuración de seguridad...");
         http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/pruebas/**").hasRole("EMPLEADO")
                         .pathMatchers("/vehiculos/**").hasRole("VEHICULO")
                         .pathMatchers("/reportes/**").hasRole("ADMIN")
-                        .pathMatchers("/notificaciones/**").hasAnyRole("ADMIN", "EMPLEADO")
+                        .pathMatchers("/notificaciones/**").hasAnyRole("ADMIN", "EMPLEADO", "VEHICULO")
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -21,13 +21,12 @@ import java.util.Optional;
 public class PruebaService {
     @Autowired
     private PruebaRepository pruebaRepository;
-
     @Autowired
-    private VehiculoRepository vehiculoRepository; // Añadir el repositorio correspondiente
+    private VehiculoRepository vehiculoRepository;
     @Autowired
-    private InteresadoRepository interesadoRepository; // Añadir el repositorio correspondiente
+    private InteresadoRepository interesadoRepository;
     @Autowired
-    private EmpleadoRepository empleadoRepository; // Añadir el repositorio correspondiente
+    private EmpleadoRepository empleadoRepository;
 
     // Crear una nueva prueba
     public void crearPrueba(PruebaDTO pruebaDTO) {
@@ -42,17 +41,17 @@ public class PruebaService {
 
         // Validar que el interesado no esté restringido
         if (interesado.getInteRestringido()) {
-            throw new IllegalStateException("El interesado está restringido y no puede realizar pruebas.");
+            throw new IllegalStateException("El interesado esta restringido y no puede realizar pruebas.");
         }
 
         // Validar que la licencia del interesado no esté vencida
         if (interesado.getInteFechaVencimientoLicencia().before(new Timestamp(System.currentTimeMillis()))) {
-            throw new IllegalStateException("La licencia del interesado está vencida.");
+            throw new IllegalStateException("La licencia del interesado esta vencida.");
         }
 
         // Verificar que el vehículo no esté en uso en otra prueba
-        if (pruebaRepository.countByVehiculoAndPrFechaHoraFinIsNull(vehiculo) > 0) {
-            throw new IllegalStateException("El vehículo ya está siendo probado.");
+        if (pruebaRepository.countByVehiculoAndPrFechaHoraFinIsNullOrFuture(vehiculo, new Timestamp(System.currentTimeMillis())) > 0) {
+            throw new IllegalStateException("El vehiculo ya esta siendo probado.");
         }
 
         // Crear nueva entidad Prueba a partir del DTO
@@ -61,9 +60,14 @@ public class PruebaService {
         prueba.setInteresado(interesado);
         prueba.setEmpleado(empleado);
         prueba.setPrFechaHoraInicio(pruebaDTO.getFechaHoraInicio());
+        // Validar que la fecha fin sea correcta
         if (pruebaDTO.getFechaHoraFin() != null) {
+            if (pruebaDTO.getFechaHoraFin().before(pruebaDTO.getFechaHoraInicio())) {
+                throw new IllegalStateException("La fecha de fin no puede ser anterior a la fecha de inicio.");
+            }
             prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
         }
+
         prueba.setPrComentarios(pruebaDTO.getComentarios());
 
         // Guardar en la base de datos
@@ -71,28 +75,51 @@ public class PruebaService {
     }
 
 
-    // Obtener todas las pruebas en curso
+    // Obtener todas las pruebas en curso (enviando por parametro la fecha y hora actual)
     public List<Prueba> obtenerPruebasEnCurso() {
-        return pruebaRepository.findByPrFechaHoraFinIsNull();
+        return pruebaRepository.findByPrFechaHoraFinIsNullOrFuture(new Timestamp(System.currentTimeMillis()));
     }
 
     // Obtener todas las pruebas
-
     public List<Prueba> obtenerPruebas() {
         return pruebaRepository.findAll();
     }
 
-    // Finalizar una prueba existente
+    // Finalizar prueba
     public void finalizarPrueba(Integer id, PruebaDTO pruebaDTO) {
         Optional<Prueba> pruebaOptional = pruebaRepository.findById(id);
         if (!pruebaOptional.isPresent()) {
             throw new IllegalStateException("La prueba no existe.");
         }
+        Timestamp fechaHoraActual = new Timestamp(System.currentTimeMillis());
+
+
         Prueba prueba = pruebaOptional.get();
+
+        // Verificar si la prueba ya ha finalizado (si su fecha fin es menor a la fecha actual)
+        if (prueba.getPrFechaHoraFin() != null && prueba.getPrFechaHoraFin().before(fechaHoraActual)) {
+            throw new IllegalStateException("La prueba ya ha sido finalizada.");
+        }
+
+
+        // Verificar que la fecha de fin proporcionada no sea anterior a la fecha de inicio de la prueba
+        if (pruebaDTO.getFechaHoraFin().before(prueba.getPrFechaHoraInicio())) {
+            throw new IllegalStateException("La fecha de fin no puede ser menor a la fecha de inicio de la prueba....");
+        }
+
+        // Verificar que la fecha de fin proporcionada no sea posterior a la fecha actual
+        if (pruebaDTO.getFechaHoraFin().after(fechaHoraActual)) {
+            throw new IllegalStateException("La fecha de fin no puede ser mayor a la fecha actual. (seguiria en curso...)");
+        }
+
+        // Actualizar la fecha de fin y los comentarios
         prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
         prueba.setPrComentarios(pruebaDTO.getComentarios());
 
         // Guardar los cambios
         pruebaRepository.save(prueba);
     }
+
+
+
 }

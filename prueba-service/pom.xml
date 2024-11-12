@@ -80,19 +80,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.github.openfeign</groupId>
-			<artifactId>feign-okhttp</artifactId>
-			<version>11.9</version>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-oauth2-resource-server</artifactId>
 			<version>6.3.3</version> <!-- Usa la misma versión que estás usando para Spring Security -->
-		</dependency>
-		<dependency>
-			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>okhttp</artifactId>
-			<version>4.9.3</version> <!-- Asegúrate de que sea una versión compatible -->
 		</dependency>
 		<dependency>
 			<groupId>org.keycloak</groupId>

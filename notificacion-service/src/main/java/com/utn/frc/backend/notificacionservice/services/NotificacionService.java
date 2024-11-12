@@ -25,7 +25,6 @@ public class NotificacionService {
         notificacion.setEmpleadoTelefono(notificacionDTO.getEmpleadoTelefono());
         notificacion.setMensaje(notificacionDTO.getMensaje());
         notificacion.setFechaHora(notificacionDTO.getFechaHora());
-        System.out.println("Fecha antes de guardar: " + notificacion.getFechaHora());
         System.out.println(notificacion);
 
 

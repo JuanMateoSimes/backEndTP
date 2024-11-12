@@ -1,7 +1,6 @@
 package com.utn.frc.backend.pruebaservice.client;
 
 import com.utn.frc.backend.pruebaservice.dtos.ConfiguracionDTO;
-import feign.Headers;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 

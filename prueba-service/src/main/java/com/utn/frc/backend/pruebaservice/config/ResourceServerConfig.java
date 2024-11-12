@@ -6,8 +6,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,24 +16,22 @@ public class ResourceServerConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
-                // Esta ruta puede ser accedida por cualquiera, sin autorización
+                // Autorizar solicitudes post a empleados
                 .requestMatchers(HttpMethod.POST,"/pruebas")
                 .hasRole("EMPLEADO")
-                // Esta ruta puede ser accedida por cualquiera, sin autorización
+                // Autorizar el get a pruebas en curso a empleados
                 .requestMatchers("/pruebas/en-curso")
                 .hasRole("EMPLEADO")
-                // Esta ruta puede ser accedida únicamente por usuarios autenticados con el rol de administrador
+                // Autorizar todas las solicitudes a endpoints de reportes a admin
                 .requestMatchers("/reportes/**")
                 .hasRole("ADMIN")
-                // Esta ruta puede ser accedida únicamente por usuarios autenticados con el rol de administrador
+                // Autorizar la solicitud post para registrar una posicion a vehiculo
                 .requestMatchers("/vehiculos/posicion")
                 .hasRole("VEHICULO")
-                // Esta ruta puede ser accedida únicamente por usuarios autenticados con el rol de administrador
+                // Autorizar los endpoints de notificaciones a admin y empleado
                 .requestMatchers("/notificaciones")
                 .hasAnyRole("ADMIN", "EMPLEADO")
 
-
-                // Cualquier otra petición...
                 .anyRequest()
                 .authenticated()
 
@@ -48,12 +44,9 @@ public class ResourceServerConfig {
         var jwtAuthenticationConverter = new JwtAuthenticationConverter();
         var grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
 
-        // Se especifica el nombre del claim a analizar
         grantedAuthoritiesConverter.setAuthoritiesClaimName("authorities");
-        // Se agrega este prefijo en la conversión por una convención de Spring
         grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
-        // Se asocia el conversor de Authorities al Bean que convierte el token JWT a un objeto Authorization
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
 
         return jwtAuthenticationConverter;

@@ -1,35 +1,24 @@
 package com.utn.frc.backend.pruebaservice.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.utn.frc.backend.pruebaservice.models.Empleado;
-import com.utn.frc.backend.pruebaservice.models.Interesado;
 import com.utn.frc.backend.pruebaservice.models.Prueba;
-import com.utn.frc.backend.pruebaservice.models.Vehiculo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PruebaDTO {
-    private Integer vehiculoId; // ID del vehículo en lugar del objeto
-    private Integer interesadoId; // ID del interesado (si deseas cambiarlo)
+    private Integer vehiculoId;
+    private Integer interesadoId;
     private Integer empleadoLegajo;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "America/Argentina/Buenos_Aires")
     private Timestamp fechaHoraInicio;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "America/Argentina/Buenos_Aires")
-    private Timestamp fechaHoraFin;     // Fecha y hora de fin de la prueba
-    private String comentarios; // Comentarios sobre la prueba
+    private Timestamp fechaHoraFin;
+    private String comentarios;
 
     public PruebaDTO(Prueba prueba) {
         this.vehiculoId = prueba.getVehiculo() != null ? prueba.getVehiculo().getVehId() : null;

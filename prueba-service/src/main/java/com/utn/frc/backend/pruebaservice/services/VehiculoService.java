@@ -1,6 +1,5 @@
 package com.utn.frc.backend.pruebaservice.services;
 
-import com.utn.frc.backend.pruebaservice.api.ZonaRestringida;
 import com.utn.frc.backend.pruebaservice.client.APIClient;
 import com.utn.frc.backend.pruebaservice.client.NotificacionClient;
 import com.utn.frc.backend.pruebaservice.dtos.*;
@@ -12,13 +11,10 @@ import com.utn.frc.backend.pruebaservice.repositories.EmpleadoRepository;
 import com.utn.frc.backend.pruebaservice.repositories.PosicionRepository;
 import com.utn.frc.backend.pruebaservice.repositories.PruebaRepository;
 import com.utn.frc.backend.pruebaservice.repositories.VehiculoRepository;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,13 +50,26 @@ public class VehiculoService {
         if (configuracion == null) {
             configuracion = apiClient.obtenerConfiguracion();
         }
+        // Obtener la fecha actual
+        Timestamp fechaHoraActual = new Timestamp(System.currentTimeMillis());
 
+        // Obtener las entidades necesarias
         Vehiculo vehiculo = vehiculoRepository.findById(posicionDTO.getVehiculoId())
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
 
-        Prueba pruebaEnCurso = pruebaRepository.findByVehiculoAndPrFechaHoraFinIsNull(vehiculo).orElse(null);
+        Prueba pruebaEnCurso = pruebaRepository.findByVehiculoAndPrFechaHoraFinIsNullOrFuture(vehiculo, fechaHoraActual).orElse(null);
 
+        // Chequear que la prueba este en curso
         if (pruebaEnCurso != null) {
+
+            if (posicionDTO.getFechaHora().before(pruebaEnCurso.getPrFechaHoraInicio())) {
+                throw new IllegalArgumentException("La fecha de la posicion no puede ser anterior a la fecha de inicio de la prueba.");
+            }
+
+            if (posicionRepository.existsByVehiculoAndPosFechaHora(vehiculo, posicionDTO.getFechaHora())) {
+                throw new IllegalArgumentException("Ya existe una posicion registrada con la misma fecha y hora para este vehiculo.");
+            }
+
             // Crear y guardar la nueva posición en la base de datos
             Posicion posicion = new Posicion();
             posicion.setVehiculo(vehiculo);
@@ -79,21 +88,21 @@ public class VehiculoService {
                 notificacion.setPruebaId(pruebaEnCurso.getPrId());
                 notificacion.setVehiculoId(posicionDTO.getVehiculoId());
                 notificacion.setEmpleadoTelefono(pruebaEnCurso.getEmpleado().getEmpTelefono());
-                notificacion.setMensaje(limiteExcedido ? "Excedió el límite permitido" : "Ingresó a una zona peligrosa");
+                notificacion.setMensaje(limiteExcedido ? "Excedio el limite permitido" : "Ingreso a una zona peligrosa");
                 notificacion.setFechaHora(String.valueOf(posicionDTO.getFechaHora()));
 
                 System.out.println(notificacion);
 
                 try {
                     notificacionClient.crearNotificacion(notificacion);
-                    System.out.println("Notificación creada");
+                    System.out.println("Notificacion creada");
                 } catch (Exception e) {
-                    System.err.println("Error al enviar notificación: " + e.getMessage());
+                    System.err.println("Error al enviar notificacion: " + e.getMessage());
                 }
             }
         } else {
             // Mensaje si no hay una prueba en curso
-            System.out.println("No se encontró una prueba en curso para el vehículo con ID: " + posicionDTO.getVehiculoId());
+            System.out.println("No se encontro una prueba en curso para el vehiculo con ID: " + posicionDTO.getVehiculoId());
         }
     }
 
@@ -182,9 +191,6 @@ public class VehiculoService {
 
         List<Posicion> posiciones = posicionRepository.findByVehiculoAndPosFechaHoraBetween(vehiculo, inicio, fin);
 
-        // Convertimos las fechas de String a Timestamp y ordenamos por fecha
-        posiciones.sort(Comparator.comparing(pos -> pos.getPosFechaHora()));
-
         double distanciaTotal = 0;
         for (int i = 1; i < posiciones.size(); i++) {
             double lat1 = posiciones.get(i - 1).getPosLatitud();
@@ -207,7 +213,7 @@ public class VehiculoService {
 
     public List<PruebaDTO> pruebasPorVehiculo(Integer vehiculoId) {
         Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Vehiculo no encontrado"));
         List<Prueba> pruebas = pruebaRepository.findByVehiculo(vehiculo);
         return pruebas.stream().map(PruebaDTO::new).toList();
     }
