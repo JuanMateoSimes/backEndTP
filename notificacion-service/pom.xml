@@ -67,6 +67,16 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>6.5.3.Final</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-jose</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-resource-server</artifactId>
+			<version>6.3.3</version> <!-- Usa la misma versión que estás usando para Spring Security -->
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

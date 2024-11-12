@@ -41,6 +41,14 @@
 			<version>3.34.0</version>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-community-dialects</artifactId>
 		</dependency>
@@ -77,6 +85,11 @@
 			<version>11.9</version>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-resource-server</artifactId>
+			<version>6.3.3</version> <!-- Usa la misma versión que estás usando para Spring Security -->
+		</dependency>
+		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
 			<version>4.9.3</version> <!-- Asegúrate de que sea una versión compatible -->
@@ -86,6 +99,10 @@
 			<artifactId>keycloak-spring-boot-starter</artifactId>
 			<version>18.0.0</version> <!-- Verifica la versión de Keycloak que estás usando -->
 		</dependency>
+				<dependency>
+					<groupId>org.springframework.security</groupId>
+					<artifactId>spring-security-oauth2-jose</artifactId>
+				</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

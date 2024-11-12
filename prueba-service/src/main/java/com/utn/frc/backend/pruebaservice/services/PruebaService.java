@@ -89,12 +89,7 @@ public class PruebaService {
             throw new IllegalStateException("La prueba no existe.");
         }
         Prueba prueba = pruebaOptional.get();
-        try {
-            prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("El formato de fechaHoraFin no es válido. Debe estar en el formato 'yyyy-MM-dd HH:mm:ss.SSS'", e);
-        }
-
+        prueba.setPrFechaHoraFin(pruebaDTO.getFechaHoraFin());
         prueba.setPrComentarios(pruebaDTO.getComentarios());
 
         // Guardar los cambios
