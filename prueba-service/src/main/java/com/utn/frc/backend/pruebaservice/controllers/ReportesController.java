@@ -2,6 +2,7 @@ package com.utn.frc.backend.pruebaservice.controllers;
 
 import com.utn.frc.backend.pruebaservice.dtos.PruebaDTO;
 import com.utn.frc.backend.pruebaservice.dtos.ReporteIncidenteDTO;
+import com.utn.frc.backend.pruebaservice.services.ReportesService;
 import com.utn.frc.backend.pruebaservice.services.VehiculoService;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,20 +12,26 @@ import java.util.List;
 @RestController
 @RequestMapping("/reportes")
 public class ReportesController {
+
+    private final ReportesService reportesService;
+
     private final VehiculoService vehiculoService;
 
-    public ReportesController(VehiculoService vehiculoService) {
+    public ReportesController(VehiculoService vehiculoService, ReportesService reportesService) {
         this.vehiculoService = vehiculoService;
+        this.reportesService = reportesService;
     }
+
+
 
     @GetMapping("/incidentes")
     public List<ReporteIncidenteDTO> obtenerReporteIncidentes() {
-        return vehiculoService.reporteIncidentes();
+        return reportesService.reporteIncidentes();
     }
 
     @GetMapping("/incidentes/{legajo}")
     public List<ReporteIncidenteDTO> obtenerIncidentePorEmpleado(@PathVariable Integer legajo) {
-        return vehiculoService.reporteIncidentesPorEmpleado(legajo);
+        return reportesService.reporteIncidentesPorEmpleado(legajo);
     }
     @GetMapping("/{vehiculoId}/kilometraje")
     public double obtenerKilometrajeRecorrido(
