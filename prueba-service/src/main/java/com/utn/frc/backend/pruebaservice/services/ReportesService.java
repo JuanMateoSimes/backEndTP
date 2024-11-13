@@ -67,6 +67,10 @@ public class ReportesService {
                         empleado.getEmpTelefono().equals(notificacion.getEmpleadoTelefono()))
                 .collect(Collectors.groupingBy(NotificacionDTO::getPruebaId));
 
+        if (notificacionesPorPrueba.isEmpty()) {
+            throw new IllegalArgumentException("No se encontraron notificaciones de incidentes, el empleado no tiene incidentes.");
+        }
+
         return notificacionesPorPrueba.entrySet().stream()
                 .map(entry -> {
                     Integer pruebaId = entry.getKey();
@@ -78,4 +82,5 @@ public class ReportesService {
                 })
                 .toList();
     }
+
 }
