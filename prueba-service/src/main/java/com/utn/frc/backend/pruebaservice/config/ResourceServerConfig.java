@@ -17,6 +17,7 @@ public class ResourceServerConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
                 // Autorizar solicitudes post a empleados
+
                 .requestMatchers(HttpMethod.POST,"/pruebas")
                 .hasRole("EMPLEADO")
                 // Autorizar el get a pruebas en curso a empleados
