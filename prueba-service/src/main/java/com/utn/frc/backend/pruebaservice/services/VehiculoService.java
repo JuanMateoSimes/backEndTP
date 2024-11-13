@@ -55,20 +55,20 @@ public class VehiculoService {
         Timestamp fechaHoraActual = new Timestamp(System.currentTimeMillis());
 
         Vehiculo vehiculo = vehiculoRepository.findById(posicionDTO.getVehiculoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehículo no encontrado"));
+                .orElseThrow(() -> new IllegalStateException("Vehículo no encontrado"));
 
         Prueba pruebaEnCurso = pruebaRepository.findByVehiculoAndPrFechaHoraFinIsNullOrFuture(vehiculo, fechaHoraActual).orElse(null);
 
         if (pruebaEnCurso == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se encontró una prueba en curso para el vehículo con ID: " + posicionDTO.getVehiculoId());
+            throw new IllegalStateException("No se encontró una prueba en curso para el vehículo con ID: " + posicionDTO.getVehiculoId());
         }
 
         if (posicionDTO.getFechaHora().before(pruebaEnCurso.getPrFechaHoraInicio())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha de la posición no puede ser anterior a la fecha de inicio de la prueba.");
+            throw new IllegalArgumentException("La fecha de la posición no puede ser anterior a la fecha de inicio de la prueba.");
         }
 
         if (posicionRepository.existsByVehiculoAndPosFechaHora(vehiculo, posicionDTO.getFechaHora())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe una posición registrada con la misma fecha y hora para este vehículo.");
+            throw new IllegalArgumentException("Ya existe una posición registrada con la misma fecha y hora para este vehículo.");
         }
 
         Posicion posicion = new Posicion();
@@ -93,7 +93,7 @@ public class VehiculoService {
             try {
                 notificacionClient.crearNotificacion(notificacion);
             } catch (Exception e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al enviar notificación: " + e.getMessage());
+                throw new IllegalStateException("Error al enviar notificación: " + e.getMessage());
             }
         }
 
@@ -101,6 +101,10 @@ public class VehiculoService {
     }
 
     private boolean excedeLimitePermitido(double latitud, double longitud) {
+        if (configuracion.getCoordenadasAgencia() == null || configuracion.getRadioAdmitidoKm() == 0) {
+            throw new IllegalStateException("Configuración de la agencia no está disponible o el radio admitido es inválido.");
+        }
+
         double distancia = calcularDistancia(latitud, longitud,
                 configuracion.getCoordenadasAgencia().getLat(),
                 configuracion.getCoordenadasAgencia().getLon());
@@ -108,6 +112,10 @@ public class VehiculoService {
     }
 
     private boolean estaEnZonaPeligrosa(double latitud, double longitud) {
+        if (configuracion.getZonasRestringidas() == null || configuracion.getZonasRestringidas().isEmpty()) {
+            throw new IllegalStateException("La configuración de zonas restringidas no está disponible.");
+        }
+
         for (ZonaRestringidaDTO zona : configuracion.getZonasRestringidas()) {
             if (latitud <= zona.getNoroeste().getLat() && latitud >= zona.getSureste().getLat()
                     && longitud >= zona.getNoroeste().getLon() && longitud <= zona.getSureste().getLon()) {
@@ -120,29 +128,37 @@ public class VehiculoService {
     public List<ReporteIncidenteDTO> reporteIncidentes() {
         List<NotificacionDTO> notificaciones = notificacionClient.obtenerNotificaciones();
 
-        if (notificaciones.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron notificaciones de incidentes.");
+        // Filtra solo las notificaciones que corresponden a incidentes
+        List<NotificacionDTO> incidentes = notificaciones.stream()
+                .filter(notificacion -> "Excedió el límite permitido".equals(notificacion.getMensaje()))
+                .toList();
+
+        // Verifica si hay incidentes después del filtro
+        if (incidentes.isEmpty()) {
+            throw new IllegalArgumentException("No se encontraron notificaciones de incidentes.");
         }
 
-        Map<Integer, List<NotificacionDTO>> notificacionesPorPrueba = notificaciones.stream()
-                .filter(notificacion -> "Excedió el límite permitido".equals(notificacion.getMensaje()))
+        // Agrupa los incidentes por el ID de prueba
+        Map<Integer, List<NotificacionDTO>> notificacionesPorPrueba = incidentes.stream()
                 .collect(Collectors.groupingBy(NotificacionDTO::getPruebaId));
 
+        // Mapea los incidentes agrupados a ReporteIncidenteDTO
         return notificacionesPorPrueba.entrySet().stream()
                 .map(entry -> {
                     Integer pruebaId = entry.getKey();
                     List<NotificacionDTO> notificacionesAsociadas = entry.getValue();
                     Prueba prueba = pruebaRepository.findById(pruebaId)
-                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prueba no encontrada"));
+                            .orElseThrow(() -> new IllegalArgumentException("Prueba no encontrada"));
                     PruebaDTO pruebaDTO = new PruebaDTO(prueba);
                     return new ReporteIncidenteDTO(pruebaDTO, notificacionesAsociadas);
                 })
                 .toList();
     }
 
+
     public List<ReporteIncidenteDTO> reporteIncidentesPorEmpleado(Integer empleadoId) {
         Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empleado no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Empleado no encontrado"));
 
         List<NotificacionDTO> notificaciones = notificacionClient.obtenerNotificaciones();
 
@@ -156,7 +172,7 @@ public class VehiculoService {
                     Integer pruebaId = entry.getKey();
                     List<NotificacionDTO> notificacionesAsociadas = entry.getValue();
                     Prueba prueba = pruebaRepository.findById(pruebaId)
-                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prueba no encontrada"));
+                            .orElseThrow(() -> new IllegalArgumentException("Prueba no encontrada"));
                     PruebaDTO pruebaDTO = new PruebaDTO(prueba);
                     return new ReporteIncidenteDTO(pruebaDTO, notificacionesAsociadas);
                 })
@@ -165,12 +181,12 @@ public class VehiculoService {
 
     public double kilometrajeRecorrido(Integer vehiculoId, Timestamp inicio, Timestamp fin) {
         Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehículo no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Vehículo no encontrado"));
 
         List<Posicion> posiciones = posicionRepository.findByVehiculoAndPosFechaHoraBetween(vehiculo, inicio, fin);
 
         if (posiciones.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron posiciones para el vehículo en el rango de fechas especificado.");
+            throw new IllegalArgumentException("No se encontraron posiciones para el vehículo en el rango de fechas especificado.");
         }
 
         double distanciaTotal = 0;
@@ -186,19 +202,23 @@ public class VehiculoService {
     }
 
     private double calcularDistancia(double lat1, double lon1, double lat2, double lon2) {
+        if (lat1 == 0 || lon1 == 0 || lat2 == 0 || lon2 == 0) {
+            throw new IllegalArgumentException("Coordenadas no válidas para el cálculo de la distancia.");
+        }
         return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lon2 - lon1, 2));
     }
 
     public List<PruebaDTO> pruebasPorVehiculo(Integer vehiculoId) {
         Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehículo no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Vehículo no encontrado"));
 
         List<Prueba> pruebas = pruebaRepository.findByVehiculo(vehiculo);
 
         if (pruebas.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron pruebas para el vehículo con ID: " + vehiculoId);
+            throw new IllegalArgumentException("No se encontraron pruebas para el vehículo con ID: " + vehiculoId);
         }
 
         return pruebas.stream().map(PruebaDTO::new).toList();
     }
+
 }
