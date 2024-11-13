@@ -1,6 +1,7 @@
 package com.utn.frc.backend.pruebaservice.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.utn.frc.backend.pruebaservice.models.Posicion;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,4 +17,13 @@ public class PosicionDTO {
     private Timestamp fechaHora;
     private Double latitud;
     private Double longitud;
+
+    public PosicionDTO(Posicion posicion) {
+        this.vehiculoId = posicion.getVehiculo() != null ? posicion.getVehiculo().getVehId() : null;
+        this.fechaHora = posicion.getPosFechaHora();
+        this.latitud = posicion.getPosLatitud();
+        this.longitud = posicion.getPosLongitud();
+    }
+
+
 }

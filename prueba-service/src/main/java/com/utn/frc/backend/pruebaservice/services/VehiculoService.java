@@ -45,29 +45,32 @@ public class VehiculoService {
         return (List<Vehiculo>) vehiculoRepository.findAll();
     }
 
-    public void registrarPosicionVehiculo(PosicionDTO posicionDTO) {
+    public PosicionDTO registrarPosicionVehiculo(PosicionDTO posicionDTO) {
         // Llama al cliente para obtener la configuración
         if (configuracion == null) {
             configuracion = apiClient.obtenerConfiguracion();
         }
+
         // Obtener la fecha actual
         Timestamp fechaHoraActual = new Timestamp(System.currentTimeMillis());
 
         // Obtener las entidades necesarias
         Vehiculo vehiculo = vehiculoRepository.findById(posicionDTO.getVehiculoId())
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+                .orElseThrow(() -> new IllegalStateException("Vehículo no encontrado"));
 
         Prueba pruebaEnCurso = pruebaRepository.findByVehiculoAndPrFechaHoraFinIsNullOrFuture(vehiculo, fechaHoraActual).orElse(null);
 
-        // Chequear que la prueba este en curso
+        // Chequear que la prueba esté en curso
         if (pruebaEnCurso != null) {
 
+            // Validar que la fecha de la posición no sea anterior a la fecha de inicio de la prueba
             if (posicionDTO.getFechaHora().before(pruebaEnCurso.getPrFechaHoraInicio())) {
-                throw new IllegalArgumentException("La fecha de la posicion no puede ser anterior a la fecha de inicio de la prueba.");
+                throw new IllegalArgumentException("La fecha de la posición no puede ser anterior a la fecha de inicio de la prueba.");
             }
 
+            // Verificar si ya existe una posición registrada en la misma fecha y hora
             if (posicionRepository.existsByVehiculoAndPosFechaHora(vehiculo, posicionDTO.getFechaHora())) {
-                throw new IllegalArgumentException("Ya existe una posicion registrada con la misma fecha y hora para este vehiculo.");
+                throw new IllegalArgumentException("Ya existe una posición registrada con la misma fecha y hora para este vehículo.");
             }
 
             // Crear y guardar la nueva posición en la base de datos
@@ -79,7 +82,7 @@ public class VehiculoService {
 
             posicionRepository.save(posicion);
 
-            // Verificar si es necesario enviar una notificación
+            // Verificar si es necesario enviar una notificación (por límite excedido o zona peligrosa)
             boolean limiteExcedido = excedeLimitePermitido(posicionDTO.getLatitud(), posicionDTO.getLongitud());
             boolean enZonaPeligrosa = estaEnZonaPeligrosa(posicionDTO.getLatitud(), posicionDTO.getLongitud());
 
@@ -88,21 +91,21 @@ public class VehiculoService {
                 notificacion.setPruebaId(pruebaEnCurso.getPrId());
                 notificacion.setVehiculoId(posicionDTO.getVehiculoId());
                 notificacion.setEmpleadoTelefono(pruebaEnCurso.getEmpleado().getEmpTelefono());
-                notificacion.setMensaje(limiteExcedido ? "Excedio el limite permitido" : "Ingreso a una zona peligrosa");
+                notificacion.setMensaje(limiteExcedido ? "Excedió el límite permitido" : "Ingresó a una zona peligrosa");
                 notificacion.setFechaHora(String.valueOf(posicionDTO.getFechaHora()));
-
-                System.out.println(notificacion);
 
                 try {
                     notificacionClient.crearNotificacion(notificacion);
-                    System.out.println("Notificacion creada");
                 } catch (Exception e) {
-                    System.err.println("Error al enviar notificacion: " + e.getMessage());
+                    throw new IllegalStateException("Error al enviar notificación: " + e.getMessage());
                 }
             }
+
+            // Retornar el DTO de la posición registrada
+            return new PosicionDTO(posicion);
         } else {
-            // Mensaje si no hay una prueba en curso
-            System.out.println("No se encontro una prueba en curso para el vehiculo con ID: " + posicionDTO.getVehiculoId());
+            // Si no se encontró una prueba en curso
+            throw new IllegalStateException("No se encontró una prueba en curso para el vehículo con ID: " + posicionDTO.getVehiculoId());
         }
     }
 
@@ -131,18 +134,21 @@ public class VehiculoService {
     public List<ReporteIncidenteDTO> reporteIncidentes() {
         List<NotificacionDTO> notificaciones = notificacionClient.obtenerNotificaciones();
 
+        if (notificaciones.isEmpty()) {
+            throw new IllegalStateException("No se encontraron notificaciones de incidentes.");
+        }
+
         // Agrupamos las notificaciones por pruebaId
         Map<Integer, List<NotificacionDTO>> notificacionesPorPrueba = notificaciones.stream()
                 .filter(notificacion -> "Excedió el límite permitido".equals(notificacion.getMensaje()))
                 .collect(Collectors.groupingBy(NotificacionDTO::getPruebaId));
 
-        // Creamos la lista de ReporteIncidenteDTO con la información de prueba y sus notificaciones
         List<ReporteIncidenteDTO> reporteIncidentes = notificacionesPorPrueba.entrySet().stream()
                 .map(entry -> {
                     Integer pruebaId = entry.getKey();
                     List<NotificacionDTO> notificacionesAsociadas = entry.getValue();
                     Prueba prueba = pruebaRepository.findById(pruebaId)
-                            .orElseThrow(() -> new RuntimeException("Prueba no encontrada"));
+                            .orElseThrow(() -> new IllegalStateException("Prueba no encontrada"));
                     PruebaDTO pruebaDTO = new PruebaDTO(prueba);
                     return new ReporteIncidenteDTO(pruebaDTO, notificacionesAsociadas);
                 })
@@ -150,7 +156,6 @@ public class VehiculoService {
 
         return reporteIncidentes;
     }
-
 
     public List<ReporteIncidenteDTO> reporteIncidentesPorEmpleado(Integer empleadoId) {
         // Verifica si el empleado existe
@@ -187,9 +192,13 @@ public class VehiculoService {
 
     public double kilometrajeRecorrido(Integer vehiculoId, Timestamp inicio, Timestamp fin) {
         Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+                .orElseThrow(() -> new IllegalStateException("Vehículo no encontrado"));
 
         List<Posicion> posiciones = posicionRepository.findByVehiculoAndPosFechaHoraBetween(vehiculo, inicio, fin);
+
+        if (posiciones.isEmpty()) {
+            throw new IllegalStateException("No se encontraron posiciones para el vehículo en el rango de fechas especificado.");
+        }
 
         double distanciaTotal = 0;
         for (int i = 1; i < posiciones.size(); i++) {
@@ -212,9 +221,20 @@ public class VehiculoService {
 
 
     public List<PruebaDTO> pruebasPorVehiculo(Integer vehiculoId) {
+        // Buscar el vehículo en el repositorio, si no se encuentra, lanzar una excepción
         Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
-                .orElseThrow(() -> new RuntimeException("Vehiculo no encontrado"));
+                .orElseThrow(() -> new IllegalStateException("Vehículo no encontrado"));
+
+        // Obtener las pruebas asociadas al vehículo
         List<Prueba> pruebas = pruebaRepository.findByVehiculo(vehiculo);
+
+        // Si no se encuentran pruebas, podemos lanzar una excepción también si lo consideras necesario
+        if (pruebas.isEmpty()) {
+            throw new IllegalStateException("No se encontraron pruebas para el vehículo con ID: " + vehiculoId);
+        }
+
+        // Convertir las pruebas a PruebaDTO y devolver la lista
         return pruebas.stream().map(PruebaDTO::new).toList();
     }
+
 }

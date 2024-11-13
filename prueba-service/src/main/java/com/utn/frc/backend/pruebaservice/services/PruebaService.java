@@ -28,14 +28,14 @@ public class PruebaService {
     @Autowired
     private EmpleadoRepository empleadoRepository;
 
-    // Crear una nueva prueba
-    public void crearPrueba(PruebaDTO pruebaDTO) {
-
+    public PruebaDTO crearPrueba(PruebaDTO pruebaDTO) {
         // Obtener las entidades necesarias
         Vehiculo vehiculo = vehiculoRepository.findById(pruebaDTO.getVehiculoId())
                 .orElseThrow(() -> new IllegalStateException("Vehículo no encontrado"));
+
         Interesado interesado = interesadoRepository.findById(pruebaDTO.getInteresadoId())
                 .orElseThrow(() -> new IllegalStateException("Interesado no encontrado"));
+
         Empleado empleado = empleadoRepository.findById(pruebaDTO.getEmpleadoLegajo())
                 .orElseThrow(() -> new IllegalStateException("Empleado no encontrado"));
 
@@ -60,6 +60,7 @@ public class PruebaService {
         prueba.setInteresado(interesado);
         prueba.setEmpleado(empleado);
         prueba.setPrFechaHoraInicio(pruebaDTO.getFechaHoraInicio());
+
         // Validar que la fecha fin sea correcta
         if (pruebaDTO.getFechaHoraFin() != null) {
             if (pruebaDTO.getFechaHoraFin().before(pruebaDTO.getFechaHoraInicio())) {
@@ -72,7 +73,12 @@ public class PruebaService {
 
         // Guardar en la base de datos
         pruebaRepository.save(prueba);
+
+        return new PruebaDTO(prueba);
+
+
     }
+
 
 
     // Obtener todas las pruebas en curso (enviando por parametro la fecha y hora actual)
@@ -85,24 +91,21 @@ public class PruebaService {
         return pruebaRepository.findAll();
     }
 
-    // Finalizar prueba
-    public void finalizarPrueba(Integer id, PruebaDTO pruebaDTO) {
+    public PruebaDTO finalizarPrueba(Integer id, PruebaDTO pruebaDTO) {
         Optional<Prueba> pruebaOptional = pruebaRepository.findById(id);
         if (!pruebaOptional.isPresent()) {
             throw new IllegalStateException("La prueba no existe.");
         }
+
         Timestamp fechaHoraActual = new Timestamp(System.currentTimeMillis());
-
-
         Prueba prueba = pruebaOptional.get();
 
-        // Verificar si la prueba ya ha finalizado (si su fecha fin es menor a la fecha actual)
+        // Verificar si la prueba ya ha finalizado
         if (prueba.getPrFechaHoraFin() != null && prueba.getPrFechaHoraFin().before(fechaHoraActual)) {
             throw new IllegalStateException("La prueba ya ha sido finalizada.");
         }
 
-
-        // Verificar que la fecha de fin proporcionada no sea anterior a la fecha de inicio de la prueba
+        // Verificar que la fecha de fin proporcionada no sea anterior a la fecha de inicio
         if (pruebaDTO.getFechaHoraFin().before(prueba.getPrFechaHoraInicio())) {
             throw new IllegalStateException("La fecha de fin no puede ser menor a la fecha de inicio de la prueba....");
         }
@@ -118,8 +121,10 @@ public class PruebaService {
 
         // Guardar los cambios
         pruebaRepository.save(prueba);
-    }
 
+        return new PruebaDTO(prueba);
+
+    }
 
 
 }
